@@ -17,7 +17,7 @@ class Linked_List:
                             # self._head 是Node() 类型的
 
 
-    def append(self, new_element):
+    def append_Node(self, new_element):
         """
         append函数
         功能是向链表添加新的结点
@@ -35,6 +35,14 @@ class Linked_List:
         else:
             self._head = new_element
 
+    def append(self, data):
+        """
+        :param data: 将任意的一个对象，数字、字符、或者其他，直接附加到链表中去，不用事先转变为 “链点”
+        :return:
+        """
+        # 首先将输入的data作为链点的数据域，构建链点
+        new_Node = Node(data)
+        self.append_Node(new_Node)
 
     def is_empty(self):
         """
@@ -58,7 +66,7 @@ class Linked_List:
         return length
 
 
-    def insert(self, position, new_element):
+    def insert_Node(self, position, new_element):
         """
         在链表指定索引出添加一个new_element元素
         流程如下：
@@ -88,6 +96,18 @@ class Linked_List:
 
         pre._next = new_element
         new_element._next = temp
+
+    def insert(self, position, new_data):
+        """
+        在链表指定索引出添加一个new_element元素
+        流程如下：
+            1.先判断要插入的位置是否在链表的索引范围内
+            2.当插入的位置是头结点时，（即索引为0）时，做特殊情况处理
+            3.当插入的结点位置不是在0时，找到要插入的位置，插入新结点
+        """
+        new_Node = Node(new_data)
+        self.insert_Node(position, new_Node)
+
 
     def remove(self, position):
         """
@@ -139,6 +159,7 @@ class Linked_List:
             new_list.append(temp._data)
             temp = temp._next
         print(new_list)
+        print("")
 
     def reverse(self):
         """
@@ -151,7 +172,7 @@ class Linked_List:
 
             next_node = current._next   # 将下一个链点保存在next_node中
             current._next = prev    # 将头结点变为尾结点，所以尾结点指向 None
-            prev = current  # 更新prev：当前的这个链点变为下一个链点的前一个链点
+            prev = current  # 更新prev：当前的这个链点变为下一个链点的后一个链点
             current = next_node     # 向后移动链点
         self._head = prev   # 最终将原本的链尾结点指定为链表的头结点
 
@@ -167,16 +188,3 @@ class Linked_List:
             node = Node(i)
             temp._next = node
             temp = temp._next
-
-
-if __name__ == "__main__":
-
-    list = Linked_List()
-    list.append(Node(1))
-    list.append(Node(2))
-    list.append(Node(3))
-    list.append(Node(5))
-    list.print_list()
-    print(list.get_length())
-    list.reverse()
-    list.print_list()
