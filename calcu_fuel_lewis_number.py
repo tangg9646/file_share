@@ -1,5 +1,9 @@
 
 import tkinter as tk
+import datetime as dt
+import csv
+import os
+
 # from tkinter import messagebox  # import this to fix messagebox error
 # import pickle
 
@@ -176,24 +180,24 @@ def get_input():
     return equivalent, h2_percent, lewis_number, air_flow, nh3_flow, h2_flow, all_flow, flow_speed
 
 
-def display_result(equivalent, h2_percent, lewis_number, air_flow, nh3_flow, h2_flow, all_flow, flow_speed):
-    equivalent = round(equivalent, 2)
-    h2_percent = round(h2_percent, 2)
-    lewis_number = round(lewis_number, 4)
-    air_flow = round(air_flow, 2)
-    nh3_flow = round(nh3_flow, 2)
-    h2_flow = round(h2_flow, 2)
-    all_flow = round(all_flow, 2)
-    flow_speed = round(flow_speed, 2)
-
-    var_equivalent.set(str(equivalent))
-    var_h2_percent.set(str(h2_percent))
-    var_lewis_number.set(str(lewis_number))
-    var_air_flow.set(str(air_flow))
-    var_nh3_flow.set(str(nh3_flow))
-    var_h2_flow.set(str(h2_flow))
-    var_all_flow.set(str(all_flow))
-    var_flow_speed.set(str(flow_speed))
+def display_result(params):
+    # var_equivalent.set(str(equivalent))
+    # var_h2_percent.set(str(h2_percent))
+    # var_lewis_number.set(str(lewis_number))
+    # var_air_flow.set(str(air_flow))
+    # var_nh3_flow.set(str(nh3_flow))
+    # var_h2_flow.set(str(h2_flow))
+    # var_all_flow.set(str(all_flow))
+    # var_flow_speed.set(str(flow_speed))
+    ###
+    var_equivalent.set(str(params[0]))
+    var_h2_percent.set(str(params[1]))
+    var_lewis_number.set(str(params[2]))
+    var_air_flow.set(str(params[3]))
+    var_nh3_flow.set(str(params[4]))
+    var_h2_flow.set(str(params[5]))
+    var_all_flow.set(str(params[6]))
+    var_flow_speed.set(str(params[7]))
 
 def cal_lewis_number(h2_percent):
     """
@@ -229,23 +233,26 @@ def cal_mix_ratio(h2_percent):
     mix_ratio = nh3_percent / h2_percent
     return mix_ratio
 
-def calcu():
+def cal_params():
+    """
+    根据输入的信息和计算方式，计算最终应该输出的结果
+    :return:
+    """
     cal_method = int(var_selected.get())
     equivalent, h2_percent, lewis_number, air_flow, nh3_flow, h2_flow, all_flow, flow_speed = get_input()
 
     mix_ratio = cal_mix_ratio(h2_percent)
 
-    circular_area = 3.141592653 * (1.34 / 2)**2
+    circular_area = 3.141592653 * (1.34 / 2) ** 2
     concentrate_o2 = 0.21
-
 
     if cal_method == 1 or cal_method == 11:
         # 给定当量比、h2含量、空气流量
         if cal_method == 1:
-            h2_flow = (air_flow * concentrate_o2) / ((5*mix_ratio+2)/(4*equivalent))
+            h2_flow = (air_flow * concentrate_o2) / ((5 * mix_ratio + 2) / (4 * equivalent))
             nh3_flow = mix_ratio * h2_flow
             all_flow = air_flow + h2_flow + nh3_flow
-            flow_speed = all_flow /60.0 / circular_area
+            flow_speed = all_flow / 60.0 / circular_area
             lewis_number = cal_lewis_number(h2_percent)
         else:
             h2_percent = cal_h2_percent(lewis_number)
@@ -260,7 +267,7 @@ def calcu():
         # 给定当量比、h2占比、NH3流量大小
         if cal_method == 2:
             h2_flow = nh3_flow / mix_ratio
-            air_flow = (((5*mix_ratio+2) / (4*equivalent*mix_ratio)) * nh3_flow) / concentrate_o2
+            air_flow = (((5 * mix_ratio + 2) / (4 * equivalent * mix_ratio)) * nh3_flow) / concentrate_o2
             all_flow = air_flow + h2_flow + nh3_flow
             flow_speed = all_flow / 60.0 / circular_area
             lewis_number = cal_lewis_number(h2_percent)
@@ -276,7 +283,7 @@ def calcu():
         # 给定当量比、h2占比、H2流量
         if cal_method == 3:
             nh3_flow = mix_ratio * h2_flow
-            air_flow = h2_flow * ((5*mix_ratio+2)/(4*equivalent)) / concentrate_o2
+            air_flow = h2_flow * ((5 * mix_ratio + 2) / (4 * equivalent)) / concentrate_o2
             all_flow = air_flow + h2_flow + nh3_flow
             flow_speed = all_flow / 60.0 / circular_area
             lewis_number = cal_lewis_number(h2_percent)
@@ -292,9 +299,9 @@ def calcu():
     elif cal_method == 4 or cal_method == 44:
         # 给定当量比、h2占比、总流量
         if cal_method == 4:
-            h2_flow = all_flow / (1 + mix_ratio + (((5*mix_ratio+2)/(4*equivalent)) / concentrate_o2))
+            h2_flow = all_flow / (1 + mix_ratio + (((5 * mix_ratio + 2) / (4 * equivalent)) / concentrate_o2))
             nh3_flow = mix_ratio * h2_flow
-            air_flow = ((5*mix_ratio+2)/(4*equivalent)) / concentrate_o2 * h2_flow
+            air_flow = ((5 * mix_ratio + 2) / (4 * equivalent)) / concentrate_o2 * h2_flow
             flow_speed = all_flow / 60.0 / circular_area
             lewis_number = cal_lewis_number(h2_percent)
         else:
@@ -321,11 +328,90 @@ def calcu():
             nh3_flow = mix_ratio * h2_flow
             air_flow = ((5 * mix_ratio + 2) / (4 * equivalent)) / concentrate_o2 * h2_flow
 
-    display_result(equivalent, h2_percent, lewis_number, air_flow, nh3_flow, h2_flow, all_flow, flow_speed)
+    # 将计算结果截止保留两位小数
+    equivalent = round(equivalent, 2)
+    h2_percent = round(h2_percent, 2)
+    lewis_number = round(lewis_number, 4)
+    air_flow = round(air_flow, 2)
+    nh3_flow = round(nh3_flow, 2)
+    h2_flow = round(h2_flow, 2)
+    all_flow = round(all_flow, 2)
+    flow_speed = round(flow_speed, 2)
+
+    return equivalent, h2_percent, lewis_number, air_flow, nh3_flow, h2_flow, all_flow, flow_speed
+
+### 创建文件，记录每次点击“计算”  的实现代码块 ###
+
+def mkdir(path):
+    """
+    在指定位置创建文件夹，用于放置 .csv文件
+    :param path:
+    :return:
+    """
+    folder = os.path.exists(path)
+    if not folder:                   #判断是否存在文件夹如果不存在则创建为文件夹
+        os.makedirs(path)            #makedirs 创建文件时如果路径不存在会创建这个路径
+        print("已成功创建文件夹")
+    else:
+        print("本身已经存在该文件夹")
+
+
+def create_csv():
+    dir_path = "C:/H2-NH3_Experiment/"
+    mkdir(dir_path)
+    file_path = dir_path + str(dt.datetime.now().strftime("%Y-%m-%d---%H-%M-%S")) + ".csv"
+    with open(file_path, 'w', newline='') as f:
+        csv_write = csv.writer(f)
+        csv_head = ["time", "当量比", "H2占比", "Lewis数", "空气流量", \
+                    "NH3流量", "H2流量", "总流量", "流速"]
+        csv_write.writerow(csv_head)
+
+    return file_path
+
+
+
+def write_csv(file_path, add_content):
+    with open(file_path, 'a+', newline='') as f:
+        csv_write = csv.writer(f)
+        data_row = add_content
+        csv_write.writerow(data_row)
+
+
+def write_params_to_csv(params):
+    """
+    每按一次“计算”按钮，将计算结果存储到csv文件中去
+    :return:
+    """
+    global count
+    global file_path
+    if count == 1:
+        # 表明是第一次点击“计算”按钮
+        # 在指定位置创建目录并建立指定文件名称的csv文件
+        file_path = create_csv()
+        write_csv(file_path, params)
+        count += 1
+    else:
+        write_csv(file_path, params)
+        count += 1
+
+    print("\n第{}点击【计算】按钮".format(count-1))
+
+
+count = 1   # 全局变量，用于记录第几次按下“计算”按钮，默认为1
+file_path = ""  # 全局变量，用于记录创建的csv文件的文件路径
+
+def calcu():
+
+    equivalent, h2_percent, lewis_number, air_flow, nh3_flow, h2_flow, all_flow, flow_speed = cal_params()
+    params = [equivalent, h2_percent, lewis_number, air_flow, nh3_flow, h2_flow, all_flow, flow_speed]
+    display_result(params)
+
+    params.insert(0, str(dt.datetime.now().strftime("%Y-%m-%d---%H-%M-%S")))
+    write_params_to_csv(params)
 
     print(equivalent, h2_percent, lewis_number, air_flow, nh3_flow, h2_flow, all_flow, flow_speed)
+    print("选择的计算方式为：")
     print(var_selected.get())
-
 
 
 btn_calcu = tk.Button(window, text='计算', command=calcu, padx=5, pady=5, background='gray', font=('Times news',20))
